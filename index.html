@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <title>User App</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous"
+    />
+
+    <style>
+      body {
+        background: #121212;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      input,
+      .modal {
+        color: black;
+        vertical-align: middle;
+      }
+      .table-striped > tbody > tr:nth-child(2n + 1) > td,
+      .table-striped > tbody > tr:nth-child(2n + 1) > th {
+        background-color: #202020;
+      }
+      .row .alert {
+        margin-top: 25px;
+      }
+      th,
+      td {
+        border-top: none !important;
+      }
+
+      h3 {
+        background-color: #333;
+        padding: 12px;
+        border-top-right-radius: 20px;
+        font-weight: bolder;
+        letter-spacing: 0.1em;
+      }
+
+      .modal-content {
+        border-radius: 0;
+      }
+
+      .modal-header,
+      .modal-footer {
+        background-color: #202020;
+        color: white;
+        border: 0;
+      }
+
+      .modal-body {
+        background: #202020;
+        color: white;
+      }
+
+      .close,
+      .close:hover {
+        color: white;
+      }
+
+      .btn {
+        font-weight: bolder;
+        letter-spacing: 0.2em;
+      }
+
+      #confetti-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 5;
+        pointer-events: none;
+      }
+    </style>
+
+    <script>
+      window.console = window.console || function (t) {};
+    </script>
+
+    <script>
+      if (document.location.search.match(/type=embed/gi)) {
+        window.parent.postMessage("resize", "*");
+      }
+    </script>
+  </head>
+
+  <body translate="no">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h3>ADD USER</h3>
+          <form id="addUser" action="">
+            <div class="form-group">
+              <input
+                class="form-control"
+                type="text"
+                name="fname"
+                placeholder="First Name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                class="form-control"
+                type="text"
+                name="lname"
+                placeholder="Last Name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                class="form-control"
+                type="text"
+                name="address"
+                placeholder="Address"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                class="form-control"
+                type="text"
+                name="email"
+                placeholder="Email"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                class="form-control"
+                type="number"
+                name="contact"
+                placeholder="Contact Number"
+                required
+              />
+            </div>
+            <button class="btn btn-primary form-control" type="submit">
+              SUBMIT
+            </button>
+          </form>
+        </div>
+        <div class="col-md-8">
+          <h3>USERS</h3>
+          <table id="userTable" class="table table-striped">
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Address</th>
+              <th>Email</th>
+              <th>Contact Number</th>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="myModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="myModalLabel"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title" id="myModalLabel">Update User</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/sithumonline/cdn/js/confetti.js"></script>
+    <script id="rendered-js">
+      var users = [];
+
+      $(document).ready(function () {
+        var settings = {
+          url: "http://localhost:8030/user/",
+          method: "GET",
+          timeout: 0,
+        };
+
+        $.ajax(settings).done(function (response) {
+          users = response;
+          $.each(users, function (i, user) {
+            appendToUsrTable(user);
+          });
+        });
+      });
+
+      $("form").submit(function (e) {
+        e.preventDefault();
+      });
+
+      $("form#addUser").submit(function () {
+        var user = {};
+        var fnameInput = $(this).find("input[name=fname]");
+        var lnameInput = $('input[name="lname"]').val().trim();
+        var addressInput = $('input[name="address"]').val().trim();
+        var emailInput = $('input[name="email"]').val().trim();
+        var contactInput = $('input[name="contact"]').val().trim();
+        if (fnameInput && lnameInput && addressInput && emailInput && contactInput) {
+          $(this)
+            .serializeArray()
+            .map(function (data) {
+              user[data.name] = data.value;
+            });
+          var lastUser = users[Object.keys(users).sort().pop()];
+          user.id = lastUser.id + 1;
+
+          addUser(user);
+        } else {
+          alert("All fields must have a valid value.");
+        }
+      });
+
+      function addUser(user) {
+        startConfetti();
+
+        var settings = {
+          url: "http://localhost:8030/user/",
+          method: "POST",
+          timeout: 0,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify(user),
+        };
+
+        $.ajax(settings).done(function (response) {
+          $("form#addUser").trigger("reset");
+        });
+
+        users.push(user);
+        appendToUsrTable(user);
+
+        setTimeout(function () {
+          stopConfetti();
+        }, 1000);
+      }
+
+      function editUser(id) {
+        users.forEach(function (user, i) {
+          if (user.id == id) {
+            $(".modal-body").empty().append(`
+                <form id="updateUser" action="">
+                    <label for="fname">First Name</label>
+                    <input class="form-control" type="text" name="fname" value="${user.fname}"/>
+                    <label for="lname">Last Name</label>
+                    <input class="form-control" type="text" name="lname" value="${user.lname}"/>
+                    <label for="address">Address</label>
+                    <input class="form-control" type="text" name="address" value="${user.address}"/>
+                    <label for="email">Email</label>
+                    <input class="form-control" type="text" name="email" value="${user.email}"/>
+                    <label for="contact">Contact</label>
+                    <input class="form-control" type="number" name="contact" value="${user.contact}"/>
+            `);
+            $(".modal-footer").empty().append(`
+                    <button type="button" type="submit" class="btn btn-primary" onClick="updateUser(${id})">Save changes</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </form>
+            `);
+          }
+        });
+      }
+
+      function deleteUser(id) {
+        var action = confirm("Are you sure you want to delete this user?");
+        var msg = "User deleted successfully!";
+        users.forEach(function (user, i) {
+          if (user.id == id && action != false) {
+            var settings = {
+              url: `http://localhost:8030/user/${user.id}`,
+              method: "DELETE",
+              timeout: 0,
+            };
+
+            $.ajax(settings).done(function (response) {});
+
+            users.splice(i, 1);
+            $("#userTable #user-" + user.id).remove();
+            flashMessage(msg);
+          } 
+        });
+      }
+
+      function updateUser(id) {
+        var msg = "User updated successfully!";
+        var user = {};
+        user.id = id;
+        users.forEach(function (user, i) {
+          if (user.id == id) {
+            $("#updateUser")
+              .children("input")
+              .each(function () {
+                var value = $(this).val();
+                var attr = $(this).attr("name");
+                if (attr == "fname") {
+                  user.fname = value;
+                } else if (attr == "lname") {
+                  user.lname = value;
+                } else if (attr == "address") {
+                  user.address = value;
+                } else if (attr == "email") {
+                  user.email = value;
+                } else if (attr == "contact") {
+                  user.contact = value;
+                }
+              });
+
+            var settings = {
+              url: `http://localhost:8030/user/${user.id}`,
+              method: "PUT",
+              timeout: 0,
+              headers: {
+                "Content-Type": "application/json",
+              },
+              data: JSON.stringify(user),
+            };
+
+            $.ajax(settings).done(function (response) {});
+
+            users[i] = user;
+            $("#userTable #user-" + user.id).remove();
+            appendToUsrTable(user);
+
+            $(".modal").modal("toggle");
+            flashMessage(msg);
+          }
+        });
+      }
+
+      function flashMessage(msg) {
+        $(".flashMsg").remove();
+        $(".row").prepend(`
+        <div class="col-sm-12"><div class="flashMsg alert alert-success alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>${msg}</strong></div></div>
+    `);
+      }
+
+      function appendToUsrTable(user) {
+        $("#userTable > tbody:last-child").append(`
+        <tr id="user-${user.id}">
+            <td class="userData" name="fname">${user.fname}</td>
+            '<td class="userData" name="lname">${user.lname}</td>
+            '<td class="city" name="address">${user.address}</td>
+            '<td class="userData" name="email">${user.email}</td>
+            '<td id="tdNumber" class="userData" name="contact">${user.contact}</td>
+            '<td align="center">
+                <button class="btn btn-success rounded-circle form-control" onClick="editUser(${user.id})" data-toggle="modal" data-target="#myModal")">EDIT</button>
+            </td>
+            <td align="center">
+                <button class="btn btn-danger form-control" onClick="deleteUser(${user.id})">DELETE</button>
+            </td>
+        </tr>
+    `);
+      }
+    </script>
+  </body>
+</html>
