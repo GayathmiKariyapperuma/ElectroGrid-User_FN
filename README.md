@@ -1,4 +1,4 @@
-# ElectroGrid-FN
+# ElectroGrid-User_FN
 
 Backend - https://github.com/YashmikaAnusara/PAF-Project-ElectroGrid <br>
 SQL - https://github.com/YashmikaAnusara/PAF-Project-ElectroGrid/blob/main/User%20Management/SQL/Script.sql
